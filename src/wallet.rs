@@ -67,12 +67,15 @@ impl<K, D: Descriptor<K>> Iterator for AddrIter<'_, K, D> {
             if let Some(derived) = self.remaining.pop_front() {
                 return Some(derived);
             }
-            self.remaining = self
-                .generator
-                .derive_address(self.network, self.keychain, self.index)
-                .map(|addr| DerivedAddr::new(addr, self.keychain, self.index))
-                .collect();
-            self.index.checked_inc_assign()?;
+            if let Some(_) = self.index.checked_inc_assign() {
+                self.remaining = self
+                    .generator
+                    .derive_address(self.network, self.keychain, self.index)
+                    .map(|addr| DerivedAddr::new(addr, self.keychain, self.index))
+                    .collect();
+            } else {
+                return None;
+            }
         }
     }
 }
